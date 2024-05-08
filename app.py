@@ -15,24 +15,24 @@ from ultralytics import YOLO
 with open('model_url.txt', 'r') as f:
     model_url = f.read().strip()
 
-@st.cache_resource
-def load_cached_model(model_url):
-    '''Download and cash the model from the model_url'''
+# @st.cache_resource
+# def load_cached_model(model_url):
+#     '''Download and cash the model from the model_url'''
 
-    # download the model file from Google Drive
-    url = 'https://drive.google.com/uc?id=' + model_url.split('/')[-2]
-    print(url)
-    model_filename, headers = urllib.request.urlretrieve(url)
-    print(model_filename)
-    # load the model from the downloaded file
-    loaded_model = YOLO(model_filename, task='segment')
+#     # download the model file from Google Drive
+#     url = 'https://drive.google.com/uc?id=' + model_url.split('/')[-2]
+#     print(url)
+#     model_filename, headers = urllib.request.urlretrieve(url)
+#     print(model_filename)
+#     # load the model from the downloaded file
+#     loaded_model = YOLO(model_filename, task='segment')
 
-    return loaded_model
+#     return loaded_model
 
 
 # load the cached model
-model = load_cached_model(model_url)
-#model = YOLO('best.pt', task='segment')
+#model = load_cached_model(model_url)
+model = YOLO('best.pt', task='segment')
 
 
 def predict_with_bounding_box(image, model=model):
@@ -46,18 +46,15 @@ def predict_with_bounding_box(image, model=model):
     # Make the prediction
     results = model(img)
 
-    # Filter and draw bounding boxes
-    for det in results[0].boxes:
-        print(det.xyxy.tolist())
+    for i, r in enumerate(results):
+        # Get annotated image as NumPy array (BGR format)
+        annotated_img_bgr = r.plot(conf=False, labels=False)
 
-        # Get bounding box coordinates
-        x_min, y_min, x_max, y_max = det.xyxy.tolist()[0]
+        # Convert to RGB format (optional, if needed)
+        annotated_img_rgb = annotated_img_bgr[..., ::-1]
 
-        # Draw bounding box and label (class name)
-        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (255, 0, 0), 2) 
 
-    return img
-
+    return annotated_img_bgr
 
 def main():
     '''main function for Streamlit app'''
@@ -67,44 +64,32 @@ def main():
                 </div>
               """
     html_temp1="""
-                <div style="background: linear-gradient(to left, #ff5f6d, #ffc371); margin-top:100%;" >
+                <div style="background: linear-gradient(to left, #ff5f6d, #ffc371); margin-top:50%;" >
                 <h4 style="color:white;text-align:center; font-family:unset;">
-                <a style="color:black; text-decoration:none; font-size:30px" href="https://github.com/Yousef-Nasr/human-segmentation">🚀 Git repository</a>
+                <a style="color:black; text-decoration:none; font-size:30px" href="https://github.com/Yousef-Nasr/Brain-tumor-segmentation">🚀 Git repository</a>
                 </h4>
                 </div>
               """
     st.markdown(html_temp,unsafe_allow_html=True)
     r_image, l_image = st.columns(2)
-    option = st.sidebar.radio('Select input type:', ('Upload', 'URL'))
-    if option == 'Upload':
-        uploaded_file = st.sidebar.file_uploader("Upload image", type=['png', 'jpg', 'jpeg'])
-        if uploaded_file:
-            # display uploaded image
-            r_image.image(uploaded_file, caption="original image", width=500)
-            pil_img = Image.open(uploaded_file)
-            pil_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-            newimg = pil_img.copy()
-            # if newimg.size > (500, 500):
-            #     newimg = newimg.resize((500, 500))
-    elif option == 'URL':
-        url = st.sidebar.text_input('Enter an image URL')
-        if url:
-            try:
-                response = requests.get(url)
-                img = Image.open(BytesIO(response.content))
-                r_image.image(img, caption="original image", width=500)
-                newimg = img.copy()
-                if newimg.size > (500, 500):
-                    newimg = newimg.resize((500, 500))
-            except:
-                st.warning('URL is invalid', icon="🚨")
+    uploaded_file = st.sidebar.file_uploader("Upload image", type=['png', 'jpg', 'jpeg'])
+    if uploaded_file == None:
+        r_image.image('img1.jpg', caption="original image", width=500)
+        pil_img = Image.open('img1.jpg')
+        newimg = pil_img.copy()
+
+    if uploaded_file:
+        # display uploaded image
+        r_image.image(uploaded_file, caption="original image", width=500)
+        pil_img = Image.open(uploaded_file)
+        newimg = pil_img.copy()
+
+    # make prediction
     done_btn = st.button('Predict 🧙‍♂️', use_container_width=True)
 
     if done_btn:
-        print(newimg)
         result = predict_with_bounding_box(newimg)
-        print('done')
-        l_image.image(result)
+        l_image.image(result, caption="Predicted image", width=500)
         st.success('Done !', icon="✅")
     
     st.sidebar.markdown(html_temp1,unsafe_allow_html=True)
