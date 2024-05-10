@@ -5,7 +5,7 @@ from PIL import Image
 import urllib.request
 import requests
 import streamlit as st
-st.set_page_config(layout="wide",page_icon="🖼️", page_title="Brian Tumor Segmentation")
+st.set_page_config(layout="wide",page_icon="🖼️", page_title="Brain Tumor Segmentation")
 from ultralytics import YOLO
 # Load a model
 
