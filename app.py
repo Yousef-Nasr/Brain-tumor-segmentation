@@ -60,7 +60,7 @@ def main():
     '''main function for Streamlit app'''
     html_temp="""
                 <div style="background: linear-gradient(to right, #ff5f6d, #ffc371); margin-bottom:20px;">
-                <h2 style="color:white;text-align:center; font-family:unset;">Brian Tumor Segmentation </h2>
+                <h2 style="color:white;text-align:center; font-family:unset;">Brain Tumor Segmentation </h2>
                 </div>
               """
     html_temp1="""
